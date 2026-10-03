@@ -1,14 +1,15 @@
 import streamlit as st
-from bot import get_rag_chain, rag_chain
+from bot import rag_chain
 
 st.set_page_config(page_title="Medical AI Assistant", page_icon="⚕️")
 st.title("⚕️ Medical Knowledge Assistant")
 
+# Cache the loaded RAG chain using st.cache_resource
 @st.cache_resource
 def load_chain():
-    return get_rag_chain()
+    return rag_chain
 
-rag_chain = load_chain()
+chain = load_chain()
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -24,8 +25,8 @@ if prompt := st.chat_input("Ask a medical question..."):
     with st.chat_message("assistant"):
         with st.spinner("Searching medical records..."):
             try:
-                response = rag_chain.invoke(prompt)
+                response = chain.invoke(prompt)
                 st.markdown(response)
                 st.session_state.messages.append({"role": "assistant", "content": response})
             except Exception as e:
-                st.error(f"An error occurred: {e}") 
+                st.error(f"An error occurred: {e}")
