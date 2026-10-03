@@ -1,5 +1,5 @@
 import streamlit as st
-from bot import get_rag_chain
+from bot import get_rag_chain, rag_chain
 
 st.set_page_config(page_title="Medical AI Assistant", page_icon="⚕️")
 st.title("⚕️ Medical Knowledge Assistant")
