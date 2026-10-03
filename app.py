@@ -1,13 +1,22 @@
+import os
 import streamlit as st
-from bot import rag_chain
 
+# Set Streamlit Page Config
 st.set_page_config(page_title="Medical AI Assistant", page_icon="⚕️")
+
+# Load Streamlit Secrets into Environment Variables
+if "PINECONE_API_KEY" in st.secrets:
+    os.environ["PINECONE_API_KEY"] = st.secrets["PINECONE_API_KEY"]
+if "GROQ_API_KEY" in st.secrets:
+    os.environ["GROQ_API_KEY"] = st.secrets["GROQ_API_KEY"]
+
+from bot import get_rag_chain
+
 st.title("⚕️ Medical Knowledge Assistant")
 
-# Cache the loaded RAG chain using st.cache_resource
 @st.cache_resource
 def load_chain():
-    return rag_chain
+    return get_rag_chain()
 
 chain = load_chain()
 

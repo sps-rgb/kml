@@ -52,3 +52,6 @@ def get_rag_chain():
         | StrOutputParser()
     )
     return rag_chain
+
+# Export rag_chain directly to prevent ImportErrors
+rag_chain = get_rag_chain()
