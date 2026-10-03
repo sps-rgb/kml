@@ -1,7 +1,6 @@
 import os
 
-os.environ["PINECONE_API_KEY"] = "pcsk_37GL85_9XcD2V9jcXRZh8yX4CqcpahVC2pGpCqng6Ra6MdxJ4mbUroKJ5e7U3uBG2hUJE3"
-os.environ["GROQ_API_KEY"] = "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"
+
 from dotenv import load_dotenv
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
