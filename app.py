@@ -1,9 +1,10 @@
 import os
 import streamlit as st
+from bot import get_rag_chain
 
-# =====================================================
+# ======================================================
 # PAGE CONFIG
-# =====================================================
+# ======================================================
 
 st.set_page_config(
     page_title="MediAI",
@@ -11,9 +12,9 @@ st.set_page_config(
     layout="wide"
 )
 
-# =====================================================
-# API KEYS
-# =====================================================
+# ======================================================
+# ENV VARIABLES
+# ======================================================
 
 if "PINECONE_API_KEY" in st.secrets:
     os.environ["PINECONE_API_KEY"] = st.secrets["PINECONE_API_KEY"]
@@ -21,146 +22,105 @@ if "PINECONE_API_KEY" in st.secrets:
 if "GROQ_API_KEY" in st.secrets:
     os.environ["GROQ_API_KEY"] = st.secrets["GROQ_API_KEY"]
 
-from bot import get_rag_chain
-
-
-# =====================================================
+# ======================================================
 # CSS
-# =====================================================
+# ======================================================
 
 st.markdown("""
 <style>
 
-/* Hide Streamlit Stuff */
+/* Hide Streamlit branding */
 #MainMenu {visibility:hidden;}
 footer {visibility:hidden;}
 header {visibility:hidden;}
 
-/* App */
-.stApp{
-    background:#0b1220;
-    color:white;
+/* Page */
+.stApp {
+    background: #0B1220;
 }
 
-/* Width */
-.block-container{
-    max-width:1100px;
-    padding-top:2rem;
-    padding-bottom:8rem;
-}
-
-/* Fonts */
-html, body, [class*="css"]{
-    font-family: Inter, sans-serif;
+.block-container {
+    max-width: 1100px;
+    padding-top: 2rem;
+    padding-bottom: 6rem;
 }
 
 /* Hero */
-.hero{
-    text-align:center;
-    padding:40px 20px 20px 20px;
+.hero {
+    text-align: center;
+    padding: 2rem 0 1rem 0;
 }
 
-.hero-title{
-    font-size:4rem;
-    font-weight:800;
-    color:white;
-    margin-bottom:8px;
+.hero h1 {
+    font-size: 4rem;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 0.5rem;
 }
 
-.hero-subtitle{
-    font-size:1.2rem;
-    color:#94a3b8;
-    max-width:700px;
-    margin:auto;
-    line-height:1.7;
+.hero p {
+    color: #94A3B8;
+    font-size: 1.15rem;
+    max-width: 700px;
+    margin: auto;
+    line-height: 1.7;
 }
 
-/* Metrics */
-.metric-card{
-    background:rgba(255,255,255,0.04);
-    border:1px solid rgba(255,255,255,0.08);
-    border-radius:18px;
-    padding:20px;
-    text-align:center;
-    backdrop-filter:blur(15px);
-}
-
-.metric-title{
-    color:#94a3b8;
-    font-size:0.9rem;
-}
-
-.metric-value{
-    color:white;
-    font-size:1.5rem;
-    font-weight:700;
-}
-
-/* Welcome */
-.welcome{
-    margin-top:25px;
-    padding:35px;
-    text-align:center;
-    background:rgba(255,255,255,0.04);
-    border:1px solid rgba(255,255,255,0.08);
-    border-radius:24px;
-    backdrop-filter:blur(15px);
-}
-
-.welcome h2{
-    color:white;
-}
-
-.welcome p{
-    color:#94a3b8;
+/* Cards */
+.glass-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+    padding: 1.25rem;
+    text-align: center;
 }
 
 /* Chat Messages */
-[data-testid="stChatMessage"]{
-    background:rgba(255,255,255,0.04);
-    border:1px solid rgba(255,255,255,0.08);
-    border-radius:18px;
-    padding:12px;
-    margin-bottom:14px;
+[data-testid="stChatMessage"] {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 18px;
+    padding: 12px;
 }
 
 /* Buttons */
-.stButton button{
-    width:100%;
-    border-radius:16px;
-    border:1px solid rgba(255,255,255,0.1);
-    background:#111827;
-    color:white;
-    min-height:55px;
-    transition:0.2s;
+.stButton button {
+    width: 100%;
+    border-radius: 14px;
+    min-height: 55px;
+    background: #111827;
+    color: white;
+    border: 1px solid #1F2937;
 }
 
-.stButton button:hover{
-    border-color:#14b8a6;
-    color:#14b8a6;
+.stButton button:hover {
+    border-color: #14B8A6;
+    color: #14B8A6;
 }
 
-/* Chat Input */
-[data-testid="stChatInput"]{
-    background:#111827;
-    border-radius:18px;
+/* Section Title */
+.section-title {
+    color: white;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
 }
 
-/* Disclaimer */
-.disclaimer{
-    margin-top:40px;
-    color:#64748b;
+/* Footer */
+.footer {
     text-align:center;
-    font-size:0.85rem;
+    color:#64748B;
+    margin-top:40px;
+    font-size:0.9rem;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-
-# =====================================================
-# LOAD MODEL
-# =====================================================
+# ======================================================
+# LOAD CHAIN
+# ======================================================
 
 @st.cache_resource
 def load_chain():
@@ -168,202 +128,179 @@ def load_chain():
 
 chain = load_chain()
 
-# =====================================================
-# STATE
-# =====================================================
+# ======================================================
+# SESSION STATE
+# ======================================================
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-if "example_prompt" not in st.session_state:
-    st.session_state.example_prompt = None
+if "sample_prompt" not in st.session_state:
+    st.session_state.sample_prompt = None
 
-
-# =====================================================
+# ======================================================
 # HERO
-# =====================================================
+# ======================================================
 
 st.markdown("""
 <div class="hero">
-    <div class="hero-title">
-        ⚕️ MediAI
-    </div>
-
-    <div class="hero-subtitle">
-        AI-powered medical knowledge assistant.
-        Search symptoms, diseases, medications,
-        treatments and evidence-based medical information.
-    </div>
+    <h1>⚕️ MediAI</h1>
+    <p>
+        AI-powered medical knowledge assistant for symptoms,
+        diseases, medications, treatments and evidence-based
+        healthcare information.
+    </p>
 </div>
 """, unsafe_allow_html=True)
 
-# =====================================================
-# METRICS
-# =====================================================
+# ======================================================
+# TOP INFO CARDS
+# ======================================================
 
-m1,m2,m3 = st.columns(3)
+c1, c2, c3 = st.columns(3)
 
-with m1:
+with c1:
     st.markdown("""
-    <div class="metric-card">
-        <div class="metric-title">Knowledge Base</div>
-        <div class="metric-value">Medical RAG</div>
+    <div class="glass-card">
+        <h3>📚 Knowledge Base</h3>
+        <p>Medical Documents</p>
     </div>
     """, unsafe_allow_html=True)
 
-with m2:
+with c2:
     st.markdown("""
-    <div class="metric-card">
-        <div class="metric-title">Search</div>
-        <div class="metric-value">Pinecone</div>
+    <div class="glass-card">
+        <h3>🔍 Retrieval</h3>
+        <p>Pinecone Vector Search</p>
     </div>
     """, unsafe_allow_html=True)
 
-with m3:
+with c3:
     st.markdown("""
-    <div class="metric-card">
-        <div class="metric-title">Model</div>
-        <div class="metric-value">Groq LLM</div>
+    <div class="glass-card">
+        <h3>🤖 AI Model</h3>
+        <p>Groq Powered</p>
     </div>
     """, unsafe_allow_html=True)
 
+# ======================================================
+# CLEAR CHAT
+# ======================================================
 
-# =====================================================
-# EMPTY SCREEN
-# =====================================================
+col1, col2 = st.columns([8,1])
+
+with col2:
+    if st.button("🗑 Clear"):
+        st.session_state.messages = []
+        st.rerun()
+
+# ======================================================
+# EMPTY STATE
+# ======================================================
 
 if len(st.session_state.messages) == 0:
 
-    st.markdown("""
-    <div class="welcome">
-        <h2>What would you like to know?</h2>
-        <p>
-        Ask a medical question or choose one of the examples below.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        '<div class="section-title">Suggested Questions</div>',
+        unsafe_allow_html=True
+    )
 
-    st.markdown("### Suggested Questions")
+    a, b = st.columns(2)
 
-    c1,c2 = st.columns(2)
-
-    with c1:
-
-        if st.button("🫀 Common symptoms of hypertension"):
-            st.session_state.example_prompt = (
+    with a:
+        if st.button("🫀 Symptoms of Hypertension"):
+            st.session_state.sample_prompt = (
                 "What are the common symptoms of hypertension?"
             )
 
         if st.button("💊 How do antibiotics work?"):
-            st.session_state.example_prompt = (
+            st.session_state.sample_prompt = (
                 "How do antibiotics work?"
             )
 
-    with c2:
-
-        if st.button("🩸 Causes of iron deficiency anemia"):
-            st.session_state.example_prompt = (
+    with b:
+        if st.button("🩸 Iron Deficiency Anemia"):
+            st.session_state.sample_prompt = (
                 "What causes iron deficiency anemia?"
             )
 
-        if st.button("🧠 Migraine vs headache"):
-            st.session_state.example_prompt = (
+        if st.button("🧠 Migraine vs Headache"):
+            st.session_state.sample_prompt = (
                 "Explain the difference between migraine and headache."
             )
 
-
-# =====================================================
+# ======================================================
 # CHAT HISTORY
-# =====================================================
+# ======================================================
 
-for message in st.session_state.messages:
+for msg in st.session_state.messages:
 
-    avatar = "🧑" if message["role"] == "user" else "⚕️"
+    avatar = "🧑" if msg["role"] == "user" else "⚕️"
 
-    with st.chat_message(
-        message["role"],
-        avatar=avatar
-    ):
-        st.markdown(message["content"])
+    with st.chat_message(msg["role"], avatar=avatar):
+        st.markdown(msg["content"])
 
-
-# =====================================================
+# ======================================================
 # INPUT
-# =====================================================
+# ======================================================
 
 typed_prompt = st.chat_input(
     "Ask a medical question..."
 )
 
-prompt = typed_prompt or st.session_state.example_prompt
+prompt = typed_prompt or st.session_state.sample_prompt
 
-# =====================================================
-# RESPONSE
-# =====================================================
+# ======================================================
+# GENERATE RESPONSE
+# ======================================================
 
 if prompt:
 
-    st.session_state.example_prompt = None
+    st.session_state.sample_prompt = None
 
-    with st.chat_message(
-        "user",
-        avatar="🧑"
-    ):
+    with st.chat_message("user", avatar="🧑"):
         st.markdown(prompt)
 
-    st.session_state.messages.append(
-        {
-            "role":"user",
-            "content":prompt
-        }
-    )
+    st.session_state.messages.append({
+        "role": "user",
+        "content": prompt
+    })
 
-    with st.chat_message(
-        "assistant",
-        avatar="⚕️"
-    ):
+    with st.chat_message("assistant", avatar="⚕️"):
 
-        with st.spinner(
-            "Searching medical knowledge..."
-        ):
+        with st.spinner("Searching medical knowledge..."):
 
             try:
 
                 result = chain.invoke(prompt)
 
                 if isinstance(result, dict):
-
-                    response = (
+                    answer = (
                         result.get("answer")
                         or result.get("result")
+                        or result.get("output")
                         or str(result)
                     )
-
                 else:
-                    response = str(result)
+                    answer = str(result)
 
-                st.markdown(response)
+                st.markdown(answer)
 
-                st.session_state.messages.append(
-                    {
-                        "role":"assistant",
-                        "content":response
-                    }
-                )
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": answer
+                })
 
             except Exception as e:
 
-                st.error(
-                    f"Error: {e}"
-                )
+                st.error(f"Error: {e}")
 
-# =====================================================
+# ======================================================
 # FOOTER
-# =====================================================
+# ======================================================
 
 st.markdown("""
-<div class="disclaimer">
-Medical information provided by AI is for educational purposes only and
-should not replace professional medical advice, diagnosis or treatment.
+<div class="footer">
+⚠️ This assistant provides educational medical information and should not replace professional medical advice.
 </div>
 """, unsafe_allow_html=True)
